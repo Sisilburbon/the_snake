@@ -23,16 +23,30 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED = 8
+SPEED = 20
 
 
-class Apple:
+class GameObject:
+    """Базовый класс для игровых объектов"""
+
+    def __init__(self, position, color):
+        """Инициализация игрового объекта"""
+        self.position = position
+        self.color = color
+
+    def draw(self, screen):
+        """Отрисовка игрового объекта"""
+        rect = pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(screen, self.color, rect)
+        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
+
+
+class Apple(GameObject):
     """Класс яблока"""
 
     def __init__(self):
         """Инициализация яблока"""
-        self.position = (0, 0)
-        self.color = APPLE_COLOR
+        super().__init__((0, 0), APPLE_COLOR)
         self.randomize_position()
 
     def randomize_position(self):
@@ -42,20 +56,14 @@ class Apple:
             randint(0, GRID_HEIGHT - 1) * GRID_SIZE,
         )
 
-    def draw(self, screen):
-        """Отрисовка яблока"""
-        rect = pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, self.color, rect)
-        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
-
-class Snake:
+class Snake(GameObject):
     """Класс змейки"""
 
     def __init__(self):
         """Инициализация змейки"""
-        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
-        self.color = SNAKE_COLOR
+        super().__init__((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), SNAKE_COLOR)
+        self.positions = [self.position]
         self.direction = RIGHT
         self.next_direction = None
         self.length = 1
@@ -89,7 +97,7 @@ class Snake:
     def reset(self):
         """Сброс змейки"""
         self.length = 1
-        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
+        self.positions = [self.position]
         self.direction = RIGHT
         self.next_direction = None
 
