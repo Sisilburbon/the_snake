@@ -3,17 +3,13 @@ import sys
 from multiprocessing import Process
 from pathlib import Path
 from typing import Any
-
 from pygame.time import Clock
 import pytest
 import pytest_timeout
-
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 sys.path.append(str(BASE_DIR))
-
 # Hide the pygame screen
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
-
 TIMEOUT_ASSERT_MSG = (
     'Проект работает некорректно, проверка прервана.\n'
     'Вероятные причины ошибки:\n'
@@ -23,12 +19,8 @@ TIMEOUT_ASSERT_MSG = (
     '2. В цикле `while True` внутри функции `main` отсутствует вызов метода '
     '`tick` объекта `clock`. Не изменяйте прекод в этой части.'
 )
-
-
 def import_the_snake():
     import the_snake  # noqa
-
-
 @pytest.fixture(scope='session')
 def snake_import_test():
     check_import_process = Process(target=import_the_snake)
@@ -38,8 +30,6 @@ def snake_import_test():
     if check_import_process.is_alive():
         os.kill(pid, 9)
         raise AssertionError(TIMEOUT_ASSERT_MSG)
-
-
 @pytest.fixture(scope='session')
 def _the_snake(snake_import_test):
     try:
@@ -54,11 +44,8 @@ def _the_snake(snake_import_test):
             f'Убедитесь, что в модуле `the_snake` определен класс `{class_name}`.'
         )
     return the_snake
-
-
 def write_timeout_reasons(text, stream=None):
     """Write possible reasons of tests timeout to stream.
-
     The function to replace pytest_timeout traceback output with possible
     reasons of tests timeout.
     Appears only when `thread` method is used.
@@ -67,11 +54,7 @@ def write_timeout_reasons(text, stream=None):
         stream = sys.stderr
     text = TIMEOUT_ASSERT_MSG
     stream.write(text)
-
-
 pytest_timeout.write = write_timeout_reasons
-
-
 def _create_game_object(class_name, module):
     try:
         return getattr(module, class_name)()
@@ -84,30 +67,19 @@ def _create_game_object(class_name, module):
             'них установлены значения по умолчанию. Например:\n'
             '`def __init__(self, <параметр>=<значение_по_умолчанию>):`'
         )
-
-
 @pytest.fixture
 def game_object(_the_snake):
     return _create_game_object('GameObject', _the_snake)
-
-
 @pytest.fixture
 def snake(_the_snake):
     return _create_game_object('Snake', _the_snake)
-
-
 @pytest.fixture
 def apple(_the_snake):
     return _create_game_object('Apple', _the_snake)
-
-
 class StopInfiniteLoop(Exception):
     pass
-
-
 def loop_breaker_decorator(func):
     call_counter = 0
-
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
         nonlocal call_counter
@@ -116,23 +88,18 @@ def loop_breaker_decorator(func):
             raise StopInfiniteLoop
         return result
     return wrapper
-
-
 @pytest.fixture
 def modified_clock(_the_snake):
     class _Clock:
         def __init__(self, clock_obj: Clock) -> None:
             self.clock = clock_obj
-
         @loop_breaker_decorator
         def tick(self, *args, **kwargs):
             return self.clock.tick(*args, **kwargs)
-
         def __getattribute__(self, name: str) -> Any:
             if name in ['tick', 'clock']:
                 return super().__getattribute__(name)
             return self.clock.__getattribute__(name)
-
     original_clock = _the_snake.clock
     modified_clock_obj = _Clock(original_clock)
     _the_snake.clock = modified_clock_obj
