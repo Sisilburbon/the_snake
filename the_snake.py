@@ -21,7 +21,11 @@ SNAKE_COLOR = (0, 255, 0)
 ROCK_COLOR = (100, 100, 100)
 
 # Скорость движения змейки:
-SPEED = 15
+SPEED = 11
+
+# Глобальные переменные для pygame
+screen = None
+clock = None
 
 
 class GameObject:
@@ -34,6 +38,7 @@ class GameObject:
 
     def draw(self):
         """Будет определен в дочерних классах."""
+        raise NotImplementedError
 
 
 class Apple(GameObject):
@@ -111,25 +116,16 @@ class Snake(GameObject):
             head_position[1] + GRID_SIZE // 3
         )
 
+        eye_color = BOARD_BACKGROUND_COLOR
+
         if self.direction == LEFT:
-            pygame.draw.circle(
-                screen, BOARD_BACKGROUND_COLOR,
-                left_eye_position, 3
-            )
+            pygame.draw.circle(screen, eye_color, left_eye_position, 3)
         elif self.direction == RIGHT:
-            pygame.draw.circle(
-                screen, BOARD_BACKGROUND_COLOR,
-                right_eye_position, 3
-            )
-        else:
-            pygame.draw.circle(
-                screen, BOARD_BACKGROUND_COLOR,
-                right_eye_position, 3
-            )
-            pygame.draw.circle(
-                screen, BOARD_BACKGROUND_COLOR,
-                left_eye_position, 3
-            )
+            pygame.draw.circle(screen, eye_color, right_eye_position, 3)
+        else:  # UP or DOWN - draw both eyes
+            pygame.draw.circle(screen, eye_color, left_eye_position, 3)
+            pygame.draw.circle(screen, eye_color, right_eye_position, 3)
+
 
         if self.last:
             last_rect = pygame.Rect(self.last, (GRID_SIZE, GRID_SIZE))
@@ -190,11 +186,11 @@ class GameOver(Exception):
 def main():
     """Бесконечный цикл игры, пока пользователь не закроет окно."""
     pygame.init()
-    global screen
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+    global screen, clock  # Объявляем screen и clock как глобальные
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) # Убираем лишние аргументы
     pygame.display.set_caption("Змейка")
-    global clock
     clock = pygame.time.Clock()
+
     apple = Apple()
     snake = Snake()
     rock = Rock()
@@ -216,6 +212,7 @@ def main():
                 snake.reset()
                 screen.fill(BOARD_BACKGROUND_COLOR)
 
+            screen.fill(BOARD_BACKGROUND_COLOR)
             apple.draw()
             rock.draw()
             snake.draw()
@@ -223,7 +220,11 @@ def main():
             pygame.display.update()
         except GameOver:
             pygame.quit()
+            return 
 
 
-if __name__ == "__main__":
-    main()
+def puck(__name__, main):
+    if __name__ == "__main__":
+        main()
+
+puck(__name__, main)
